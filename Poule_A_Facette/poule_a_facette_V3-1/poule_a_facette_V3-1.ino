@@ -28,29 +28,26 @@ int colors_winter[NUMPIXELS][3] = {{242, 145, 189},{248, 58, 144},{199, 26, 173}
 
 Adafruit_NeoPixel leds(NUMPIXELS, NUMPIN, NEO_GRB + NEO_KHZ800);
 
-//Setup leds
-//Setup WiFi connection
-//Setup web route
-//Setup website on local IP
 void setup() {
-  
+  // Serial setup
   Serial.begin(9600);
-  
+  // WiFi set up
   WiFi.persistent(false);
   WiFi.begin(ssid, password);
+  // Waiting for connexion
   Serial.print("Tentative de connexion...");
-
   while (WiFi.status() != WL_CONNECTED)
   {
       Serial.print(".");
       delay(100);
   }
-
+  // Webserver on
   Serial.println("\n");
   Serial.println("Connexion etablie!");
   Serial.print("Adresse IP: ");
   Serial.println(WiFi.localIP());
 
+  // Set up website route
   server.on("/", handleRoot);
   server.on("/lsd", change_palette_lsd);
   server.on("/uwu", change_palette_uwu);
@@ -61,22 +58,22 @@ void setup() {
   server.begin();
   Serial.println("Serveur web actif!");
 
-  
+  // Set up leds clocks
   #if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
     clock_prescale_set(clock_div_1);
   #endif
   leds.begin();
 }
 
-//Read value from mic for frequencies
-//Read value from potentiometer for brightness
-//Select the leds colors according to our choice
-//Waiting for client communication to choose colors
-//Setup brightness according to potentiometer value
 void loop() {
+  // Get the analog values
   val_potar_analog = analogRead(POTAR_ANALOG);
   val_analog = analogRead(PIN_ANALOG);
+
+  // Set the new brightness
   leds.setBrightness(val_potar_analog/16.05);
+
+  // Set the new colors
   switch ( palette_colors )
   {
      case 0:
@@ -99,10 +96,17 @@ void loop() {
         break;
   }
   delay(75);
+
+  // Waiting for website's response
   server.handleClient();
 }
 
-//Light up leds according to frequencies
+/**
+ * @brief Select the led to light up
+ * 
+ * @param analog value detected by the microphone
+ * @param colors is the choosen palette
+ */
 void chooseTheLed(int analog, int colors[NUMPIXELS][3]){  
   // Turn off every leds
   for(int i=0; i < NUMPIXELS; i++) {
@@ -137,6 +141,16 @@ void chooseTheLed(int analog, int colors[NUMPIXELS][3]){
 }
 
 //Light up 2 leds at the same time
+/**
+ * @brief 
+ * 
+ * @param leds the clocks
+ * @param num_led_pannel_1 led position on first clock
+ * @param num_led_pannel_2 led position on second clock
+ * @param red code for RGB
+ * @param green code for RGB
+ * @param blue code for RGB
+ */
 void light_them_up(Adafruit_NeoPixel *leds, int num_led_pannel_1, int num_led_pannel_2, int red, int green, int blue) {
   // Set the new color
   leds->setPixelColor(num_led_pannel_1, leds->Color(red, green, blue));
@@ -145,7 +159,10 @@ void light_them_up(Adafruit_NeoPixel *leds, int num_led_pannel_1, int num_led_pa
   leds->show();
 }
 
-//Choose colors LSD and redirect to homepage
+/**
+ * @brief Choose colors LSD and redirect to homepage
+ * 
+ */
 void change_palette_lsd()
 {
     palette_colors = 0;
@@ -153,7 +170,10 @@ void change_palette_lsd()
     server.send(303);
 }
 
-//Choose colors UWU and redirect to homepage
+/**
+ * @brief Choose colors UwU and redirect to homepage
+ * 
+ */
 void change_palette_uwu()
 {
     palette_colors = 1;
@@ -161,7 +181,10 @@ void change_palette_uwu()
     server.send(303);
 }
 
-//Choose colors Sunshine and redirect to homepage
+/**
+ * @brief Choose colors Sunshine and redirect to homepage
+ * 
+ */
 void change_palette_sunshine()
 {
     palette_colors = 2;
@@ -169,7 +192,10 @@ void change_palette_sunshine()
     server.send(303);
 }
 
-//Choose colors Autumn and redirect to homepage
+/**
+ * @brief Choose colors Autumn and redirect to homepage
+ * 
+ */
 void change_palette_autumn()
 {
     palette_colors = 3;
@@ -177,7 +203,10 @@ void change_palette_autumn()
     server.send(303);
 }
 
-//Choose colors Winter and redirect to homepage
+/**
+ * @brief Choose colors Winter and redirect to homepage
+ * 
+ */
 void change_palette_winter()
 {
     palette_colors = 4;
@@ -185,13 +214,19 @@ void change_palette_winter()
     server.send(303);
 }
 
-//Page not found
+/**
+ * @brief Website : error 404
+ * 
+ */
 void handleNotFound()
 {
     server.send(404, "text/plain", "404: Not found");
 }
 
-//Homepage for local website
+/**
+ * @brief Website : set the html / css code
+ * 
+ */
 void handleRoot()
 {
     String page;
